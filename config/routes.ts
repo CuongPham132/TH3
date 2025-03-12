@@ -42,6 +42,30 @@
 		icon: 'OrderedListOutlined',
 		component: './TodoList',
 	},
+	{
+		path: '/Quanlylichhen',
+		name: 'Quản lý lịch hẹn',
+		component: './Quanlylichhen/Quanlylichhen',
+		icon: 'CalendarOutlined',
+	},
+	{
+		path: '/Quanlynhanvien',
+		name: 'Quản lý nhân viên',
+		component: './Quanlynhanvien/Quanlynhanvien',
+		icon: 'UserOutlined',
+	},
+	{
+		path: '/Danhgiadichvu',
+		name: 'Đánh giá dịch vụ',
+		component: './Danhgiadichvu/Danhgiadichvu',
+		icon: 'StarOutlined',
+	},
+	{
+		path: '/Thongke',
+		name: 'Thống kê',
+		component: './Thongke/Thongke',
+		icon: 'BarChartOutlined',
+	},
 
 	// DANH MUC HE THONG
 	// {
@@ -95,4 +119,5 @@
 	{
 		component: './exception/404',
 	},
+	
 ];
