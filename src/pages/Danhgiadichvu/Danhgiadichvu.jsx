@@ -1,61 +1,73 @@
-import React, { useState } from 'react';
-import { Table, Button, Modal, Form, Input, Rate, message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Modal, Input, Rate, message } from 'antd';
+
+const { TextArea } = Input;
 
 const Danhgiadichvu = () => {
-    const [reviews, setReviews] = useState([
-        { id: 1, customer: 'Nguyễn Văn A', service: 'Cắt tóc', employee: 'Thợ A', rating: 5, comment: 'Rất tốt!' },
-        { id: 2, customer: 'Trần Thị B', service: 'Spa', employee: 'Thợ B', rating: 4, comment: 'Dịch vụ ổn.' },
-    ]);
-
+    const [appointments, setAppointments] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedService, setSelectedService] = useState(null);
-    const [form] = Form.useForm();
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [replyText, setReplyText] = useState('');
 
-    // Mở modal đánh giá
-    const showReviewModal = (record) => {
-        setSelectedService(record);
+    useEffect(() => {
+        const storedAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
+        setAppointments(storedAppointments);
+    }, []);
+
+    const showReplyModal = (appointment) => {
+        setSelectedCustomer(appointment.customer); // Ghi nhận khách hàng cần phản hồi
+        setReplyText(appointment.reply || ''); // Lấy phản hồi cũ (nếu có)
         setIsModalOpen(true);
-        form.setFieldsValue({ rating: 5, comment: '' });
     };
 
-    // Xử lý đóng modal
     const handleCancel = () => {
         setIsModalOpen(false);
-        form.resetFields();
+        setReplyText('');
     };
 
-    // Lưu đánh giá mới
-    const handleReview = (values) => {
-        const newReview = {
-            id: reviews.length + 1,
-            customer: 'Bạn',
-            service: selectedService.service,
-            employee: selectedService.employee,
-            rating: values.rating,
-            comment: values.comment,
-        };
+    const handleReplySubmit = () => {
+        if (!selectedCustomer) return;
 
-        setReviews([...reviews, newReview]);
-        message.success('Cảm ơn bạn đã đánh giá!');
+        const updatedAppointments = appointments.map((appt) =>
+            appt.customer === selectedCustomer
+                ? { ...appt, reply: replyText } // Cập nhật phản hồi cho đúng khách hàng
+                : appt
+        );
+
+        setAppointments(updatedAppointments);
+        localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+
+        message.success(`Phản hồi đã gửi đến khách hàng: ${selectedCustomer}`);
         setIsModalOpen(false);
-        form.resetFields();
     };
 
     const columns = [
         { title: 'Khách hàng', dataIndex: 'customer', key: 'customer' },
         { title: 'Dịch vụ', dataIndex: 'service', key: 'service' },
-        { title: 'Nhân viên', dataIndex: 'employee', key: 'employee' },
+        { title: 'Nhân viên phục vụ', dataIndex: 'employee', key: 'employee' },
         {
             title: 'Đánh giá',
             dataIndex: 'rating',
             key: 'rating',
             render: (rating) => <Rate disabled defaultValue={rating} />,
         },
-        { title: 'Nhận xét', dataIndex: 'comment', key: 'comment' },
+        {
+            title: 'Nhận xét',
+            dataIndex: 'comment',
+            key: 'comment',
+            render: (comment) => comment || '❌ Chưa có nhận xét',
+        },
+        {
+            title: 'Phản hồi của nhân viên',
+            dataIndex: 'reply',
+            key: 'reply',
+            render: (_, record) => record.reply ? `✅ ${record.reply}` : `⏳ Chưa có phản hồi`,
+        },
         {
             title: 'Hành động',
-            render: (text, record) => (
-                <Button type="primary" onClick={() => showReviewModal(record)}>Đánh giá</Button>
+            key: 'action',
+            render: (_, record) => (
+                <Button type="primary" onClick={() => showReplyModal(record)}>Phản hồi</Button>
             ),
         },
     ];
@@ -63,21 +75,20 @@ const Danhgiadichvu = () => {
     return (
         <div>
             <h2>Đánh giá dịch vụ</h2>
-            <Table dataSource={reviews} columns={columns} rowKey="id" />
+            <Table dataSource={appointments} columns={columns} rowKey="id" />
 
-            <Modal title="Đánh giá dịch vụ" open={isModalOpen} onCancel={handleCancel} footer={null}>
-                <Form form={form} layout="vertical" onFinish={handleReview}>
-                    <Form.Item label="Đánh giá" name="rating" rules={[{ required: true, message: 'Vui lòng chọn số sao' }]}>
-                        <Rate />
-                    </Form.Item>
-                    <Form.Item label="Nhận xét" name="comment">
-                        <Input.TextArea rows={3} placeholder="Nhập nhận xét của bạn" />
-                    </Form.Item>
-                    <Form.Item>
-                        <Button type="primary" htmlType="submit">Gửi đánh giá</Button>
-                        <Button onClick={handleCancel} style={{ marginLeft: 8 }}>Hủy</Button>
-                    </Form.Item>
-                </Form>
+            <Modal
+                title={`Phản hồi khách hàng: ${selectedCustomer}`}
+                visible={isModalOpen}
+                onCancel={handleCancel}
+                onOk={handleReplySubmit}
+            >
+                <TextArea
+                    rows={3}
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder={`Nhập phản hồi cho khách hàng: ${selectedCustomer}`}
+                />
             </Modal>
         </div>
     );
